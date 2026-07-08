@@ -1,0 +1,19 @@
+# .NET build output
+bin/
+obj/
+.vs/
+*.user
+
+# EF Core / SQLite (Phase 8)
+*.db
+*.db-shm
+*.db-wal
+
+# Angular / Node (Billing.Frontend, Phase 6)
+node_modules/
+dist/
+.angular/
+
+# OS
+.DS_Store
+Thumbs.db
