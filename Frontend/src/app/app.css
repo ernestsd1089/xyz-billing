@@ -1,0 +1,14 @@
+.app-header {
+  padding: 1rem 2rem;
+  border-bottom: 1px solid #ddd;
+  font-family: system-ui, sans-serif;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.app-content {
+  padding: 0 1rem;
+}
