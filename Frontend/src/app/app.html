@@ -1,55 +1,7 @@
-<main class="container">
-  <h1>Submit an order</h1>
+<header class="app-header">
+  <h1>XYZ Billing</h1>
+</header>
 
-  <form (ngSubmit)="submit()" #orderForm="ngForm" class="order-form">
-    <label>
-      <span>Order number</span>
-      <input name="orderNumber" [(ngModel)]="request.orderNumber" required />
-    </label>
-
-    <label>
-      <span>User ID</span>
-      <input name="userId" [(ngModel)]="request.userId" required />
-    </label>
-
-    <label>
-      <span>Amount</span>
-      <input name="amount" type="number" step="0.01" min="0.01" [(ngModel)]="request.amount" required />
-    </label>
-
-    <label>
-      <span>Payment gateway</span>
-      <select name="paymentGatewayId" [(ngModel)]="request.paymentGatewayId" required>
-        <option value="stripe">stripe</option>
-        <option value="paypal">paypal</option>
-      </select>
-    </label>
-
-    <label>
-      <span>Description (optional)</span>
-      <input name="description" [(ngModel)]="request.description" />
-    </label>
-
-    <button type="submit" [disabled]="orderForm.invalid || submitting()">
-      {{ submitting() ? 'Submitting…' : 'Submit order' }}
-    </button>
-  </form>
-
-  @if (receipt(); as r) {
-    <section class="result receipt">
-      <h2>Receipt</h2>
-      <p>Order number: {{ r.orderNumber }}</p>
-      <p>Amount: {{ r.amount }}</p>
-      <p>Status: {{ r.status }}</p>
-      <p>Confirmation: {{ r.confirmationId }}</p>
-      <p>Timestamp: {{ r.timestamp }}</p>
-    </section>
-  }
-
-  @if (errorMessage(); as message) {
-    <section class="result error">
-      <h2>Error</h2>
-      <p>{{ message }}</p>
-    </section>
-  }
+<main class="app-content">
+  <router-outlet />
 </main>

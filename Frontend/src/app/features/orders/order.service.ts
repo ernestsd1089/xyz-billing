@@ -1,22 +1,7 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, catchError, throwError } from 'rxjs';
-
-export interface SubmitOrderRequest {
-  orderNumber: string;
-  userId: string;
-  amount: number;
-  paymentGatewayId: string;
-  description?: string;
-}
-
-export interface ReceiptResponse {
-  orderNumber: string;
-  amount: number;
-  timestamp: string;
-  confirmationId: string;
-  status: string;
-}
+import { ReceiptResponse, SubmitOrderRequest } from './order.models';
 
 @Injectable({ providedIn: 'root' })
 export class OrderService {
