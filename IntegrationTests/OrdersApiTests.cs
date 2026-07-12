@@ -1,15 +1,14 @@
 using System.Net;
 using System.Net.Http.Json;
 using Application.Models;
-using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace IntegrationTests;
 
-public class OrdersApiTests : IClassFixture<WebApplicationFactory<Program>>
+public class OrdersApiTests : IClassFixture<BillingWebApplicationFactory>
 {
     private readonly HttpClient _client;
 
-    public OrdersApiTests(WebApplicationFactory<Program> factory)
+    public OrdersApiTests(BillingWebApplicationFactory factory)
     {
         _client = factory.CreateClient();
     }
