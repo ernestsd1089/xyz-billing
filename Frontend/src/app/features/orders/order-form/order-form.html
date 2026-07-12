@@ -38,6 +38,9 @@
   @if (receipt(); as r) {
     <section class="result receipt">
       <h3>Receipt</h3>
+      @if (wasAlreadyProcessed()) {
+        <p class="notice">This order was already processed — showing the original receipt.</p>
+      }
       <p>Order number: {{ r.orderNumber }}</p>
       <p>Amount: {{ r.amount }}</p>
       <p>Status: {{ r.status }}</p>

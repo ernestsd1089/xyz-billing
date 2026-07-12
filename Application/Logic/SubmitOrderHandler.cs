@@ -12,6 +12,7 @@ public class SubmitOrderHandler
     private readonly IOrderRepository _orders;
     private readonly IPaymentGatewayResolver _gateways;
     private readonly IReceiptMapper _mapper;
+    private readonly IOrderLock _orderLock;
     private readonly TimeProvider _clock;
     private readonly ILogger<SubmitOrderHandler> _logger;
 
@@ -19,12 +20,14 @@ public class SubmitOrderHandler
         IOrderRepository orders,
         IPaymentGatewayResolver gateways,
         IReceiptMapper mapper,
+        IOrderLock orderLock,
         TimeProvider clock,
         ILogger<SubmitOrderHandler> logger)
     {
         _orders = orders;
         _gateways = gateways;
         _mapper = mapper;
+        _orderLock = orderLock;
         _clock = clock;
         _logger = logger;
     }
@@ -34,6 +37,8 @@ public class SubmitOrderHandler
         using var scope = _logger.BeginScope("OrderNumber:{OrderNumber}", request.OrderNumber);
 
         _logger.LogInformation("Processing order for gateway {GatewayId}.", request.PaymentGatewayId);
+
+        using var orderLock = await _orderLock.AcquireAsync(request.OrderNumber, cancellationToken);
 
         var existing = await _orders.GetAsync(request.OrderNumber, cancellationToken);
         if (existing is not null)
@@ -58,7 +63,9 @@ public class SubmitOrderHandler
             throw new PaymentFailedException(order.OrderNumber, result.FailureReason ?? "Payment was declined.");
         }
 
-        var receipt = Receipt.ForSuccessfulPayment(order, result.ConfirmationId!, _clock.GetUtcNow());
+        var confirmationId = result.ConfirmationId
+            ?? throw new InvalidOperationException("Gateway reported success without a confirmation id.");
+        var receipt = Receipt.ForSuccessfulPayment(order, confirmationId, _clock.GetUtcNow());
         await _orders.SaveAsync(receipt, cancellationToken);
         _logger.LogInformation("Payment succeeded with confirmation {ConfirmationId}.", receipt.ConfirmationId);
         return _mapper.ToResponse(receipt);

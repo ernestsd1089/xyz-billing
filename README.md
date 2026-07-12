@@ -61,3 +61,4 @@ configuration.
 | `ASPNETCORE_HTTP_PORTS` | environment variable | API listening port | `8080` (Compose) |
 | `Cors:AllowedOrigins` | `Api/appsettings.json` | Origins allowed to call the API cross-origin | `http://localhost:4200` |
 | dev proxy target | `Frontend/proxy.conf.json` | Where the Angular dev server forwards `/api` | `http://localhost:5207` |
+| `ConnectionStrings:Billing` | `Api/appsettings.json` | SQLite database file | `Data Source=billing.db` |
