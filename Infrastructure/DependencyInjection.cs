@@ -1,5 +1,6 @@
 using Application.Interfaces;
 using Domain.Interfaces;
+using Infrastructure.Concurrency;
 using Infrastructure.Gateways;
 using Infrastructure.Repositories;
 using Infrastructure.Resilience;
@@ -17,6 +18,7 @@ public static class DependencyInjection
     {
         services.AddDbContext<BillingDbContext>(options => options.UseSqlite(connectionString));
         services.AddScoped<IOrderRepository, EfOrderRepository>();
+        services.AddSingleton<IOrderLock, OrderLock>();
         services.AddSingleton<IChargeValidator, AmountLimitValidator>();
 
         services.AddSingleton(PaymentRetryPipeline.Create());

@@ -43,3 +43,9 @@ button:disabled {
 .error {
   background: #fdecea;
 }
+
+.notice {
+  margin: 0 0 0.5rem;
+  font-style: italic;
+  color: #555;
+}

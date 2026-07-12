@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Application.Exceptions;
 using Application.Interfaces;
 using Application.Logic;
@@ -6,6 +7,7 @@ using Application.Models;
 using Domain.Enums;
 using Domain.Interfaces;
 using Domain.Models;
+using Infrastructure.Concurrency;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Time.Testing;
 
@@ -66,16 +68,33 @@ public class SubmitOrderHandlerTests
         Assert.Equal(0, orders.SaveCount);
     }
 
+    [Fact]
+    public async Task ConcurrentDuplicateSubmissions_ChargeGatewayOnlyOnce()
+    {
+        var orders = new FakeOrderRepository();
+        var gateway = new FakeGateway { Result = PaymentResult.Success("conf-1"), ChargeDelay = TimeSpan.FromMilliseconds(50) };
+        var handler = NewHandler(orders, gateway);
+
+        var submissions = Enumerable.Range(0, 20)
+            .Select(_ => handler.HandleAsync(ValidRequest()))
+            .ToArray();
+        await Task.WhenAll(submissions);
+
+        Assert.Equal(1, gateway.ChargeCount);
+        Assert.Equal(1, orders.SaveCount);
+    }
+
     private static SubmitOrderHandler NewHandler(IOrderRepository orders, IPaymentGateway gateway)
     {
         var clock = new FakeTimeProvider(FixedTime);
-        return new SubmitOrderHandler(orders, new FakeResolver(gateway), new ReceiptMapper(), clock, NullLogger<SubmitOrderHandler>.Instance);
+        return new SubmitOrderHandler(orders, new FakeResolver(gateway), new ReceiptMapper(), new OrderLock(), clock, NullLogger<SubmitOrderHandler>.Instance);
     }
 
     private class FakeOrderRepository : IOrderRepository
     {
-        public Dictionary<string, Receipt> Store { get; } = new();
-        public int SaveCount { get; private set; }
+        public ConcurrentDictionary<string, Receipt> Store { get; } = new();
+        private int _saveCount;
+        public int SaveCount => _saveCount;
 
         public Task<Receipt?> GetAsync(string orderNumber, CancellationToken cancellationToken = default)
             => Task.FromResult(Store.TryGetValue(orderNumber, out var receipt) ? receipt : null);
@@ -83,21 +102,29 @@ public class SubmitOrderHandlerTests
         public Task SaveAsync(Receipt receipt, CancellationToken cancellationToken = default)
         {
             Store[receipt.OrderNumber] = receipt;
-            SaveCount++;
+            Interlocked.Increment(ref _saveCount);
             return Task.CompletedTask;
         }
     }
 
     private class FakeGateway : IPaymentGateway
     {
+        private int _chargeCount;
+
         public string GatewayId => "fake";
         public PaymentResult Result { get; set; } = PaymentResult.Success("conf-default");
-        public int ChargeCount { get; private set; }
+        public TimeSpan ChargeDelay { get; set; } = TimeSpan.Zero;
+        public int ChargeCount => _chargeCount;
 
-        public Task<PaymentResult> ChargeAsync(Order order, CancellationToken cancellationToken = default)
+        public async Task<PaymentResult> ChargeAsync(Order order, CancellationToken cancellationToken = default)
         {
-            ChargeCount++;
-            return Task.FromResult(Result);
+            Interlocked.Increment(ref _chargeCount);
+            if (ChargeDelay > TimeSpan.Zero)
+            {
+                await Task.Delay(ChargeDelay, cancellationToken);
+            }
+
+            return Result;
         }
     }
 
