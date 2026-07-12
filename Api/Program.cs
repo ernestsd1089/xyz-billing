@@ -7,6 +7,8 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Logging.AddSimpleConsole(options => options.IncludeScopes = true);
+
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddApplication();
@@ -27,6 +29,7 @@ using (var scope = app.Services.CreateScope())
     database.Database.EnsureCreated();
 }
 
+app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.MapOpenApi();

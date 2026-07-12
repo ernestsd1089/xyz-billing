@@ -6,6 +6,7 @@ using Application.Models;
 using Domain.Enums;
 using Domain.Interfaces;
 using Domain.Models;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Time.Testing;
 
 namespace UnitTests.Application;
@@ -68,7 +69,7 @@ public class SubmitOrderHandlerTests
     private static SubmitOrderHandler NewHandler(IOrderRepository orders, IPaymentGateway gateway)
     {
         var clock = new FakeTimeProvider(FixedTime);
-        return new SubmitOrderHandler(orders, new FakeResolver(gateway), new ReceiptMapper(), clock);
+        return new SubmitOrderHandler(orders, new FakeResolver(gateway), new ReceiptMapper(), clock, NullLogger<SubmitOrderHandler>.Instance);
     }
 
     private class FakeOrderRepository : IOrderRepository
